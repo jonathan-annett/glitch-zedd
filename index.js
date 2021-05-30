@@ -115,8 +115,9 @@ module.exports = function(rootpath) {
         res.type("text");
         res.setHeader("ETag", Date.now().toString(36).substr(2));
         res.status(404).send("check Glitch Tools/Logs window");
+        
        return require('child_process').execFile('/usr/bin/refresh', [], function (error, stdout, stderr) {
-            return setTimeout(process.exit.bind(process),1000);
+            process.exit();
 
         }); 
        
