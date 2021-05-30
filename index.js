@@ -102,7 +102,7 @@ module.exports = function() {
       return next();
     }
 
-    ZEDD.authenticate(req,function(){
+    ZEDD.authenticate(req,res,function(){
         // doesnt call here unless authenticated
         switch (req.url.trim()) {
           case zeddOptions.route + "newpass":
