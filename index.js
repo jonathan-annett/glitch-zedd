@@ -81,7 +81,10 @@ function newPasswords() {
   };
 }
 
-module.exports = function() {
+module.exports = function(rootpath) {
+  if (rootpath && require('fs').existsSync(rootpath)&&require('fs').statSync(rootpath).isDirectory()) {
+    zeddOptions.root=rootpath.replace(/\/$/,'');
+  }
   const ZeddRequest = ZEDD.middleware();
 
   if (getAutoPass()) console.log("new credentials for Zedd", newPasswords());
@@ -107,7 +110,16 @@ module.exports = function() {
         res.type("text");
         res.setHeader("ETag", Date.now().toString(36).substr(2));
         return res.status(404).send("check Glitch Tools/Logs window");
+        
+      case zeddOptions.route + "glitch-refresh":
+        res.type("text");
+        res.setHeader("ETag", Date.now().toString(36).substr(2));
+        res.status(404).send("check Glitch Tools/Logs window");
+       return require('child_process').execFile('/usr/bin/refresh', [], function (error, stdout, stderr) {
+            return setTimeout(process.exit.bind(process),1000);
 
+        }); 
+       
       case zeddOptions.route + "autopass-off":
         setAutoPass(false);
         res.type("text");
