@@ -1,0 +1,21 @@
+{
+  "name": "glitch-zedd",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "zedd": "github:jonathan-annett/zedd#a8c9ead93201ce8dda8c8c5eec874fc987ff20b3"
+  },
+  "engines": {
+    "node": "12.x"
+  },
+  "repository": {
+    "url": "https://github.com/jonathan-annett/glitch-zedd"
+  },
+  "license": "MIT",
+  "keywords": [
+    "node",
+    "glitch",
+    "express"
+  ]
+}
