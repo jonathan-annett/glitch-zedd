@@ -20,10 +20,21 @@ const path = require("path");
 
 function getAutoPass() {
   if (!getAutoPass.cache) {
-    autoPass = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey)).autoPass;
+    const config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
+    let dirty=false;
+    autoPass = config.autoPass;
     getAutoPass.cache = true;
+    if (typeof autoPass === "object") {
+      autoPass = autoPass.refresh;
+      config.autoPass = (autoPass = autoPass.refresh);
+      dirty=true;
+    }
     if (typeof autoPass === "undefined") {
-      autoPass = true;
+       config.autoPass = (autoPass = true);
+      dirty=true;
+    }
+    if (dirty) {
+      fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
     }
   }
   return autoPass;
@@ -115,6 +126,9 @@ module.exports = function(rootpath) {
         res.type("text");
         res.setHeader("ETag", Date.now().toString(36).substr(2));
         res.status(404).send("check Glitch Tools/Logs window");
+        console.log("refreshing the glitch browser");
+        setAutoPass({refreshing:getAutoPass()});
+       
         
        return require('child_process').execFile('/usr/bin/refresh', [], function (error, stdout, stderr) {
             process.exit();
