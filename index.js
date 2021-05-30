@@ -20,30 +20,29 @@ const path = require("path");
 
 function getAutoPass() {
   if (!getAutoPass.cache) {
-    const config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
-    let dirty=false;
-    autoPass = config.autoPass;
+    try {
+      autoPass = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey)).autoPass;
+      
+    } catch (e) {
+      autoPass = true;
+    }
+    
     getAutoPass.cache = true;
-    if (typeof autoPass === "object") {
-      autoPass = autoPass.refresh;
-      config.autoPass = (autoPass = autoPass.refresh);
-      dirty=true;
-    }
     if (typeof autoPass === "undefined") {
-       config.autoPass = (autoPass = true);
-      dirty=true;
-    }
-    if (dirty) {
-      fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
+      autoPass = true;
     }
   }
   return autoPass;
 }
 
 function setAutoPass(value) {
-  const config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
-  config.autoPass = autoPass = value;
-  fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
+  let config;
+  try {
+    config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
+    config.autoPass = autoPass = value;
+    fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
+  } catch (e) {
+  }
 }
 
 function newPasswords() {
@@ -92,67 +91,48 @@ function newPasswords() {
   };
 }
 
-module.exports = function(rootpath) {
-  if (rootpath && require('fs').existsSync(rootpath)&&require('fs').statSync(rootpath).isDirectory()) {
-    zeddOptions.root=rootpath.replace(/\/$/,'');
-  }
+module.exports = function() {
   const ZeddRequest = ZEDD.middleware();
 
   if (getAutoPass()) console.log("new credentials for Zedd", newPasswords());
 
   return function ZeddOnGlitchMiddleWare(req, res, next) {
+    
     if (!req.url.startsWith(zeddOptions.route)) {
       return next();
     }
 
-    req.zedd_auth = ZEDD.checkUserPass(require("basic-auth")(req));
+    ZEDD.checkAuth(req,function(){
+        // doesnt call here unless authenticated
+        switch (req.url.trim()) {
+          case zeddOptions.route + "newpass":
+            const newPass = newPasswords();
+            console.log("new credentials for Zedd", newPass);
+            res.type("text");
+            res.setHeader("ETag", Date.now().toString(36).substr(2));
+            return res.status(404).send("check Glitch Tools/Logs window");
 
-    if (!req.zedd_auth) {
-      res.writeHead(401, {
-        "WWW-Authenticate": 'Basic realm="Zed daemon"'
-      });
-      return res.end();
-    }
-    const basepath = path.basename(req.url); 
-    console.log(basepath);
-    switch (basepath) {
-      case "--newpass":
-        const newPass = newPasswords();
-        console.log("new credentials for Zedd", newPass);
-        res.type("text");
-        res.setHeader("ETag", Date.now().toString(36).substr(2));
-        return res.status(404).send("check Glitch Tools/Logs window");
-        
-      case  "---refresh":
-        res.type("text");
-        res.setHeader("ETag", Date.now().toString(36).substr(2));
-        res.status(404).send("check Glitch Tools/Logs window");
-        console.log("refreshing the glitch browser");
-        setAutoPass({refreshing:getAutoPass()});
-       
-        
-       return require('child_process').execFile('/usr/bin/refresh', [], function (error, stdout, stderr) {
-            process.exit();
+          case zeddOptions.route + "autopass-off":
+            setAutoPass(false);
+            res.type("text");
+            res.setHeader("ETag", Date.now().toString(36).substr(2));
+            console.log("server will not regenerate new password on restart");
+            return res.status(404).send("autopass-off");
 
-        }); 
-       
-      case "--auto-off":
-        setAutoPass(false);
-        res.type("text");
-        res.setHeader("ETag", Date.now().toString(36).substr(2));
-        console.log("server will not regenerate new password on restart");
-        return res.status(404).send("autopass-off");
+          case zeddOptions.route + "autopass-on":
+            setAutoPass(true);
+            res.type("text");
+            res.setHeader("ETag", Date.now().toString(36).substr(2));
+            console.log("server will regenerate new password on restart");
+            return res.status(404).send("autopass-on");
 
-      case "--auto-on":
-        setAutoPass(true);
-        res.type("text");
-        res.setHeader("ETag", Date.now().toString(36).substr(2));
-        console.log("server will regenerate new password on restart");
-        return res.status(404).send("autopass-on");
+          default:
+            return ZeddRequest(req, res, next);
+        } 
+      
+    });
+    
 
-      default:
-        return ZeddRequest(req, res, next);
-    } 
   };
 };
 
