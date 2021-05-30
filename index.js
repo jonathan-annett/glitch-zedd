@@ -105,7 +105,7 @@ module.exports = function() {
     ZEDD.authenticate(req,res,function(){
         // doesnt call here unless authenticated
         console.log("zedd:",req.method,req.url);
-        switch (req.url.trim()) {
+        switch (path.basename(req.url)) {
           case  "--newpass":
             const newPass = newPasswords();
             console.log("new credentials for Zedd", newPass);
