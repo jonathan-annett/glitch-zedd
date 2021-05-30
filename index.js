@@ -113,8 +113,9 @@ module.exports = function(rootpath) {
       });
       return res.end();
     }
-
-    switch (path.basename(req.url.trim())) {
+    const basepath = path.basename(req.url); 
+    console.log(basepath);
+    switch (basepath) {
       case "--newpass":
         const newPass = newPasswords();
         console.log("new credentials for Zedd", newPass);
