@@ -104,22 +104,23 @@ module.exports = function() {
 
     ZEDD.authenticate(req,res,function(){
         // doesnt call here unless authenticated
+        console.log("zedd:",req.method,req.url);
         switch (req.url.trim()) {
-          case zeddOptions.route + "newpass":
+          case  "--newpass":
             const newPass = newPasswords();
             console.log("new credentials for Zedd", newPass);
             res.type("text");
             res.setHeader("ETag", Date.now().toString(36).substr(2));
             return res.status(404).send("check Glitch Tools/Logs window");
 
-          case zeddOptions.route + "autopass-off":
+          case  "--auto-off":
             setAutoPass(false);
             res.type("text");
             res.setHeader("ETag", Date.now().toString(36).substr(2));
             console.log("server will not regenerate new password on restart");
             return res.status(404).send("autopass-off");
 
-          case zeddOptions.route + "autopass-on":
+          case "--auto-on":
             setAutoPass(true);
             res.type("text");
             res.setHeader("ETag", Date.now().toString(36).substr(2));
