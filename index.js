@@ -104,14 +104,14 @@ module.exports = function(rootpath) {
     }
 
     switch (path.basename(req.url.trim())) {
-      case zeddOptions.route + "--newpass":
+      case "--newpass":
         const newPass = newPasswords();
         console.log("new credentials for Zedd", newPass);
         res.type("text");
         res.setHeader("ETag", Date.now().toString(36).substr(2));
         return res.status(404).send("check Glitch Tools/Logs window");
         
-      case zeddOptions.route + "---refresh":
+      case  "---refresh":
         res.type("text");
         res.setHeader("ETag", Date.now().toString(36).substr(2));
         res.status(404).send("check Glitch Tools/Logs window");
@@ -121,14 +121,14 @@ module.exports = function(rootpath) {
 
         }); 
        
-      case zeddOptions.route + "--auto-off":
+      case "--auto-off":
         setAutoPass(false);
         res.type("text");
         res.setHeader("ETag", Date.now().toString(36).substr(2));
         console.log("server will not regenerate new password on restart");
         return res.status(404).send("autopass-off");
 
-      case zeddOptions.route + "--auto-on":
+      case "--auto-on":
         setAutoPass(true);
         res.type("text");
         res.setHeader("ETag", Date.now().toString(36).substr(2));
