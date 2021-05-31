@@ -87,7 +87,7 @@ function refreshGlitchBrowser() {
     setRefreshFlag();
     require('child_process').execFile('/usr/bin/refresh',function(){
        setTimeout(process.exit,1000);
-    }):
+    });
 }
 
 function newPasswords() {
