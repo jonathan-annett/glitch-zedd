@@ -149,7 +149,11 @@ module.exports = function() {
          console.log("Glitch browser files refreshed. Reusing existing credentials.");
       }
   } else {
-      if (getAutoPass()) console.log("Server was restarted:\nnew credentials for Zedd", newPasswords());
+      if (getAutoPass()) {
+        console.log("Server was restarted:\nnew credentials for Zedd", newPasswords());
+      } else {
+         console.log("Server was restarted, reusing existing credentials.");
+      }
   }
   return function ZeddOnGlitchMiddleWare(req, res, next) {
     
