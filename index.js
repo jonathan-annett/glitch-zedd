@@ -74,6 +74,8 @@ function getRefreshFlag() {
   try {
     config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
     result = config.refreshing;
+    getAutoPass.cache = true;
+    autoPass = config.autoPass;
     if (result) {
        delete config.refreshing;
        fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
@@ -132,7 +134,8 @@ function newPasswords() {
   return {
     url: "https://" + config.domain + zeddOptions.route,
     name: config.aux.pass1,
-    pass: zeddpass
+    pass: zeddpass,
+    note: config.autoPass ? "new credentials on each restart" : "these credentials are persistent" 
   };
 }
 
@@ -140,9 +143,13 @@ module.exports = function() {
   const ZeddRequest = ZEDD.middleware();
 
   if ( getRefreshFlag()) {
-      console.log("browser was refreshed");
+      if (autoPass) {
+         console.log("Glitch browser files refreshed. Not genererating credentials until next restart");
+      } else {
+         console.log("Glitch browser files refreshed. Reusing existing credentials.");
+      }
   } else {
-      if (getAutoPass()) console.log("new credentials for Zedd", newPasswords());
+      if (getAutoPass()) console.log("Server was restarted:\nnew credentials for Zedd", newPasswords());
   }
   return function ZeddOnGlitchMiddleWare(req, res, next) {
     
