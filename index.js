@@ -95,46 +95,22 @@ function refreshGlitchBrowser() {
 function newPasswords() {
   const config = {
       domain: process.env.PROJECT_DOMAIN + ".glitch.me",
-      aux: require(path.join(
-        path.dirname(require.resolve("server-startup")),
-        "genpass"
-      )).auxPasswords(2),
-      key: "",
-      cert: ""
-    },
-    seeds = Buffer.from(
-      JSON.stringify([
-        config.aux.nonce1,
-        config.aux.nonce2,
-        config.aux.nonce3,
-        config.aux.nonce4
-      ])
-    );
-
+    };
+  
+  // we don't store thepassword in the config, but instead the hashed version
+  // ZEDD.makeNewPassword makes a random password and user name and puts them in config,
+  // returning the unhashed random password to display/copy
+  // (note: the username is stored in the aux.pass1 field)
+  const zeddpass = ZEDD.makeNewPassword (config);
+  
   config.autoPass = autoPass;
   config.refreshing = true;
-  config.aux.pass1 = crypto.createHash("sha256")
-    .update(Buffer.concat([seeds, Buffer.from(config.aux.pass1)]))
-    .digest("base64")
-    .replace(ZEDD.base64FuglyChars, "");
-  
-  
-  const zeddpass = crypto.createHash("sha256")
-    .update(Buffer.concat([seeds, Buffer.from(config.aux.pass2)]))
-    .digest("base64")
-    .replace(ZEDD.base64FuglyChars, "");
- 
-  config.aux.pass2 = crypto.createHash("sha256")
-    .update(Buffer.concat([seeds, Buffer.from(zeddpass)]))
-    .digest("base64")
-    .replace(ZEDD.base64FuglyChars, "");
-
   fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
 
   return {
     url: "https://" + config.domain + zeddOptions.route,
-    name: config.aux.pass1,
-    pass: zeddpass,
+    name: config.aux.pass1, // the new random username is stored in the aux.pass1 field
+    pass: zeddpass,         // the unhashed password for user to remember 
     note: config.autoPass ? "new credentials on each restart" : "these credentials are persistent" 
   };
 }
