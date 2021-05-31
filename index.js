@@ -40,9 +40,54 @@ function setAutoPass(value) {
   try {
     config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
     config.autoPass = autoPass = value;
+    delete config.refreshing;
+    fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
+    getAutoPass.cache = true;
+    
+  } catch (e) {
+  }
+}
+
+
+function setRefreshFlag() {
+  let config;
+  try {
+    config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
+    config.refreshing = true;
     fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
   } catch (e) {
   }
+}
+
+function clearRefreshFlag() {
+  let config;
+  try {
+    config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
+    delete config.refreshing;
+    fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
+  } catch (e) {
+  }
+}
+
+function getRefreshFlag() {
+  let config,result=false;
+  try {
+    config = secureJSON.parse(fs.readFileSync(zeddOptions.TLSKey));
+    result = config.refreshing;
+    if (result) {
+       delete config.refreshing;
+       fs.writeFileSync(zeddOptions.TLSKey, secureJSON.stringify(config));
+    }
+  } catch (e) {
+  }
+  return result;
+}
+
+function refreshGlitchBrowser() {
+    setRefreshFlag();
+    require('child_process').execFile('/usr/bin/refresh',function(){
+       setTimeout(process.exit,1000);
+    }):
 }
 
 function newPasswords() {
@@ -65,7 +110,7 @@ function newPasswords() {
     );
 
   config.autoPass = autoPass;
-  
+  config.refreshing = true;
   config.aux.pass1 = crypto.createHash("sha256")
     .update(Buffer.concat([seeds, Buffer.from(config.aux.pass1)]))
     .digest("base64")
@@ -94,8 +139,11 @@ function newPasswords() {
 module.exports = function() {
   const ZeddRequest = ZEDD.middleware();
 
-  if (getAutoPass()) console.log("new credentials for Zedd", newPasswords());
-
+  if ( getRefreshFlag()) {
+      console.log("browser was refreshed");
+  } else {
+      if (getAutoPass()) console.log("new credentials for Zedd", newPasswords());
+  }
   return function ZeddOnGlitchMiddleWare(req, res, next) {
     
     if (!req.url.startsWith(zeddOptions.route)) {
@@ -113,6 +161,13 @@ module.exports = function() {
             res.setHeader("ETag", Date.now().toString(36).substr(2));
             return res.status(404).send("check Glitch Tools/Logs window");
 
+          case  "--refresh":
+            console.log("refreshing glitch browser");
+            res.type("text");
+            res.setHeader("ETag", Date.now().toString(36).substr(2));
+            res.status(404).send("refreshing browser");
+            return refreshGlitchBrowser();
+            
           case  "--auto-off":
             setAutoPass(false);
             res.type("text");
