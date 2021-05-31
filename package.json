@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "zedd": "github:jonathan-annett/zedd#1e418046689c9abf7e62bc5e54e9537e2dc5a61f",
+    "zedd": "github:jonathan-annett/zedd#96e4072ec801b810da9b792c027ce5a568503a5f",
     "server-startup": "github:jonathan-annett/server-startup#8987ec8c9b88c8ff87e84f9f310eed52047ed25a"
   },
   "engines": {
